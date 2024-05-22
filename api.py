@@ -5,6 +5,7 @@ import pytesseract
 import openai
 import os
 import tempfile
+import time
 
 # Configure OpenAI API key
 openai.api_key = 'sk-proj-p68xqKwS8GE2fzb3lWSCT3BlbkFJ66F8AUZJn2RMOQEe2DGU'
@@ -20,7 +21,7 @@ def extract_text_from_image(image_path):
     except (PermissionError, UnidentifiedImageError):
         raise Exception(f"Cannot process image file: {image_path}")
 
-def generate_response(extracted_text):
+def ask_openai(extracted_text):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -40,6 +41,18 @@ def generate_response(extracted_text):
         if 'message' in choice and 'content' in choice.message:
             return choice.message['content']
     return "No response from OpenAI"
+
+def generate_response(extracted_text):
+    first_response = ask_openai(extracted_text)
+    time.sleep(1)  # Adding a short delay to mimic asking the question again
+    second_response = ask_openai(extracted_text)
+    
+    if first_response == second_response:
+        return first_response
+    else:
+        time.sleep(1)  # Adding a short delay before asking the third time
+        third_response = ask_openai(extracted_text)
+        return third_response
 
 @app.route('/process-image', methods=['POST'])
 def process_image():
